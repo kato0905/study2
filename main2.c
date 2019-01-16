@@ -9,6 +9,11 @@
 #define SENTINEL 1000000000
 
 int count=0;
+int current_y;
+int current_best_score=0;
+int current_best_y;
+int current_best_low;
+int current_best_high;
 
 #ifndef Boolean         /* Boolean が定義されていなかったら */
 #define Boolean int
@@ -47,8 +52,8 @@ struct ITNode
 
 static struct ITNode *root = NULL;
 struct ITNode *original = NULL;
+struct Interval ints2[Element_num*2+2];
 
-void merge(struct Interval ints[],int left,int mid,int right);
 
 struct ITNode *newNode(int low, int high, int score)
 {
@@ -62,14 +67,18 @@ struct ITNode *newNode(int low, int high, int score)
     temp->high = high;
     temp->score = score;
     temp->left = temp->right = NULL;
-    printf("new[%d,%d]\n",temp->low,temp->high);
+    if(temp->score > current_best_score){
+      current_best_score = temp->score;
+      current_best_y = current_y;
+      current_best_low = temp->low;
+      current_best_high = temp->high;
+    }
     return temp;
 };
 
 //木に新しいノードを挿入
 //返り値は常に一番上のルートノード
-void insert(struct ITNode **node, int low, int high, int score)
-{
+void insert(struct ITNode **node, int low, int high, int score){
     if(low <= 0){
       low = 0;
     }
@@ -106,6 +115,12 @@ void insert(struct ITNode **node, int low, int high, int score)
     //完全にインターバルが重なった時 ---[i-----i]---
     }else if(low == low_score && high == high_score){
       (*node)->score += score;
+      if((*node)->score > current_best_score){
+        current_best_score = (*node)->score;
+        current_best_y = current_y;
+        current_best_low = low;
+        current_best_high = high;
+      }
       return;
 
     //左側のインターバルが重なった時 ---[i---i--]---
@@ -121,6 +136,12 @@ void insert(struct ITNode **node, int low, int high, int score)
         temp1->score = (*node)->score + score;
         temp1->left = (*node)->left;
         temp1->right = NULL;
+        if(temp1->score > current_best_score){
+          current_best_score = temp1->score;
+          current_best_y = current_y;
+          current_best_low = temp1->low;
+          current_best_high = temp1->high;
+        }
 
         struct ITNode *temp2;
         temp2 = (struct ITNode *)malloc(sizeof(struct ITNode));
@@ -151,6 +172,12 @@ void insert(struct ITNode **node, int low, int high, int score)
         temp1->score = (*node)->score + score;
         temp1->left = NULL;
         temp1->right = (*node)->right;
+        if(temp1->score > current_best_score){
+          current_best_score = temp1->score;
+          current_best_y = current_y;
+          current_best_low = temp1->low;
+          current_best_high = temp1->high;
+        }
 
         struct ITNode *temp2;
         temp2 = (struct ITNode *)malloc(sizeof(struct ITNode));
@@ -171,6 +198,12 @@ void insert(struct ITNode **node, int low, int high, int score)
     //右側のインターバルが重なり,左が外に出た時 --i-[-----i]---
     }else if(low < low_score && high == high_score){
         (*node)->score += score;
+        if((*node)->score > current_best_score){
+          current_best_score = (*node)->score;
+          current_best_y = current_y;
+          current_best_low = low_score;
+          current_best_high = high_score;
+        }
 
         insert(&(*node)->left, low, low_score, score);
 
@@ -180,6 +213,12 @@ void insert(struct ITNode **node, int low, int high, int score)
     //左側のインターバルが重なり,右が外に出た時 ---[i-----]-i--
     }else if(low == low_score && high > high_score){
         (*node)->score += score;
+        if((*node)->score > current_best_score){
+          current_best_score = (*node)->score;
+          current_best_y = current_y;
+          current_best_low = low_score;
+          current_best_high = high_score;
+        }
 
         insert(&(*node)->right, high_score, high, score);
 
@@ -223,6 +262,12 @@ void insert(struct ITNode **node, int low, int high, int score)
         temp_c->score = (*node)->score + score;
         temp_c->left = temp_l;
         temp_c->right = temp_r;
+        if(temp_c->score > current_best_score){
+          current_best_score = temp_c->score;
+          current_best_y = current_y;
+          current_best_low = temp_c->low;
+          current_best_high = temp_c->high;
+        }
 
         *node = temp_c;
 
@@ -253,8 +298,14 @@ void insert(struct ITNode **node, int low, int high, int score)
         temp1->score = (*node)->score + score;
         temp1->left = (*node)->left;
         temp1->right = temp2;
+        if(temp1->score > current_best_score){
+          current_best_score = temp1->score;
+          current_best_y = current_y;
+          current_best_low = temp1->low;
+          current_best_high = temp1->high;
+        }
 
-        insert(&(*node)->left, low, low_score, score);
+        insert(&temp1->left, low, low_score, score);
 
         *node = temp1;
 
@@ -264,6 +315,12 @@ void insert(struct ITNode **node, int low, int high, int score)
     }else if(low < low_score && high > high_score){
 
         (*node)->score += score;
+        if((*node)->score > current_best_score){
+          current_best_score = (*node)->score;
+          current_best_y = current_y;
+          current_best_low = low_score;
+          current_best_high = high_score;
+        }
 
         insert(&(*node)->left, low, low_score, score);
 
@@ -288,6 +345,12 @@ void insert(struct ITNode **node, int low, int high, int score)
         temp1->score = (*node)->score + score;
         temp1->left = NULL;
         temp1->right = (*node)->right;
+        if(temp1->score > current_best_score){
+          current_best_score = temp1->score;
+          current_best_y = current_y;
+          current_best_low = temp1->low;
+          current_best_high = temp1->high;
+        }
 
         struct ITNode *temp2;
         temp2 = (struct ITNode *)malloc(sizeof(struct ITNode));
@@ -301,7 +364,7 @@ void insert(struct ITNode **node, int low, int high, int score)
         temp2->left = (*node)->left;
         temp2->right = temp1;
 
-        insert(&(*node)->right, high_score, high, score);
+        insert(&temp1->right, high_score, high, score);
         *node = temp2;
 
         return;
@@ -333,8 +396,15 @@ void sort(struct ITNode **node){
   struct ITNode *copy = *node;
   //なるべく右を親に
   if((*node)->right != NULL){
-    (*node)->right->left = (*node)->left;
-    *node = (*node)->right;
+      if((*node)->right->left != NULL){
+        while((*node)->right->left == NULL){
+
+        }
+      }
+      (*node)->right->left = (*node)->left;
+
+      *node = (*node)->right;
+
   }else if((*node)->left != NULL){
       (*node)->left->right = (*node)->right;
       *node = (*node)->left;
@@ -353,16 +423,16 @@ void sort(struct ITNode **node){
 void delete(struct ITNode **node, int low, int high, int score){
   //NULLなら上に戻る
   if((*node) == NULL){
-    printf("----------------------------------------------------\n");
-    search(root);
+  //  printf("----------------------------------------------------\n");
+  //  search(root);
   //  delete(&original, low, high, score);
-  //  return;
-
+    return;
   }
   int low_score = (*node)->low;
   int high_score = (*node)->high;
-  printf("再帰：root[[%d,%d]]からインターバル[[%d,%d]]を削除\n",(*node)->low,(*node)->high,low,high);
+  //printf("再帰：root[[%d,%d]]からインターバル[[%d,%d]]を削除\n",(*node)->low,(*node)->high,low,high);
 
+  //完全にインターバルの外にいる時 -i-i-[-----]---
   if(high <= low_score){
     delete(&(*node)->left, low, high, score);
   }else if(low >= high_score){
@@ -372,14 +442,14 @@ void delete(struct ITNode **node, int low, int high, int score){
   }else if(low == low_score && high == high_score){
     (*node)->score -= score;
     if((*node)->score == 0){
-      sort(&(*node));
+    //  sort(&(*node));
     }
 
   //右側のインターバルが重なり,左が外に出た時 --i-[-----i]---
   }else if(low < low_score && high == high_score){
     (*node)->score -= score;
     if((*node)->score == 0){
-      sort(&(*node));
+    //  sort(&(*node));
     }
     delete(&(*node), low, low_score, score);
 
@@ -387,7 +457,7 @@ void delete(struct ITNode **node, int low, int high, int score){
   }else if(low == low_score && high > high_score){
     (*node)->score -= score;
     if((*node)->score == 0){
-      sort(&(*node));
+    //  sort(&(*node));
     }
     delete(&(*node), high_score, high, score);
 
@@ -395,7 +465,7 @@ void delete(struct ITNode **node, int low, int high, int score){
   }else if(low < low_score && high > high_score){
     (*node)->score -= score;
     if((*node)->score == 0){
-      sort(&(*node));
+    //  sort(&(*node));
     }
     delete(&(*node), low, low_score, score);
     delete(&(*node), high_score, high, score);
@@ -408,29 +478,22 @@ void delete(struct ITNode **node, int low, int high, int score){
   return;
 }
 
-void mergeSort(struct Interval ints[],int left,int right){
-  int i,mid;
-  if(left+1<right){
-    mid=(left+right)/2;
-    mergeSort(ints,left,mid);
-    mergeSort(ints,mid,right);
-    merge(ints,left,mid,right);
-  }
-}
-
 void merge(struct Interval ints[],int left,int mid,int right){
   int n1,n2,i,j,k;
   int *L,*R,*L_low,*L_high,*L_score,*R_low,*R_high,*R_score;
   n1=mid-left;//左の要素数
   n2=right-mid;//右の要素数
+
   L=(int *)malloc(sizeof(int)*(n1+1));
   L_low=(int *)malloc(sizeof(int)*(n1+1));
   L_high=(int *)malloc(sizeof(int)*(n1+1));
   L_score=(int *)malloc(sizeof(int)*(n1+1));
+
   R=(int *)malloc(sizeof(int)*(n2+1));
   R_low=(int *)malloc(sizeof(int)*(n1+1));
   R_high=(int *)malloc(sizeof(int)*(n1+1));
   R_score=(int *)malloc(sizeof(int)*(n1+1));
+
   for(i=0;i<=n1-1;i++){
     L[i]=ints[left+i].y;
     L_low[i]=ints[left+i].low;
@@ -473,8 +536,23 @@ void merge(struct Interval ints[],int left,int mid,int right){
   free(R_low);
   free(R_high);
   free(R_score);
+
 }
 
+void mergeSort(struct Interval ints[],int left,int right){
+  int i,mid;
+  if(left+1<right){
+    mid=(left+right)/2;
+    mergeSort(ints,left,mid);
+    mergeSort(ints,mid,right);
+    merge(ints,left,mid,right);
+  }
+}
+
+void sample(struct Interval ints[],int left,int right){
+  mergeSort(ints,left,right);
+  return;
+}
 
 int main()
 {
@@ -505,31 +583,35 @@ int main()
       ints[i].y = y_location + y_length/2;
       i++;
     }
-  //  mergeSort(ints,0,i);
 
-    for (int j = 20; j < 30; j++){//下から
-      if(root != NULL){
-        printf("root[[%d,%d]]にインターバル[[%d,%d]]を挿入score=[%d]\n",root->low,root->high,ints[j].low,ints[j].high,ints[j].score);
-      }
+    //mergeSort(ints,0,i);
 
-  //    if(ints[j].score > 0){
+    sample(ints,0,i);
+
+    for (int j = 0; j < i; j++){//下から
+
+      current_y = ints[j].y;
+      if(ints[j].score > 0){
         insert(&root, ints[j].low, ints[j].high, ints[j].score);
-  /*    }else if(ints[j].score < 0){
+      }else if(ints[j].score < 0){
         original = (struct ITNode *)malloc(sizeof(struct ITNode));
         original = root;
         delete(&root, ints[j].low, ints[j].high, -ints[j].score);
-      }*/
+      }
 
     }
 
     printf("----------------------------------------------------\n");
-    search(root);
+    //search(root);
+    printf("current_best is y= %d,[%d,%d],score is %d\n",current_best_y,current_best_low,current_best_high,current_best_score);
 /*
+
 int sss = 0;
 for(int j = 0; j<i;j++){
   sss += ints[j].score;
   printf("%d,[%d,%d],%d\n",ints[j].y,ints[j].low,ints[j].high,ints[j].score);
 }
-printf("%d\n",sss);*/
+printf("%d\n",sss);
+printf("%d\n",count);*/
     return 0;
 }
